@@ -10,7 +10,22 @@ project(realty VERSION ${PROJECT_VERSION} LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 
-add_executable(rclst src/main.cpp)
+include_directories("${PROJECT_SOURCE_DIR}/include")
+
+add_executable(rclst src/rclst.cpp)
+add_executable(rclss src/rclss.cpp)
+target_link_libraries(rclst
+        dlib
+        blas
+        lapack
+        )
+
+target_link_libraries(rclss
+        dlib
+        blas
+        lapack
+        )
+
 
 install(TARGETS rclst
         RUNTIME DESTINATION bin
