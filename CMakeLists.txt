@@ -27,7 +27,7 @@ target_link_libraries(rclss
         )
 
 
-install(TARGETS rclst
+install(TARGETS rclst rclss
         RUNTIME DESTINATION bin
         LIBRARY DESTINATION lib)
 
