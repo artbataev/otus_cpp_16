@@ -4,6 +4,7 @@
 #include <sstream>
 #include <algorithm>
 #include <iterator>
+#include <map>
 #include <dlib/clustering.h>
 #include "realty_data.h"
 
@@ -50,7 +51,8 @@ int main(int argc, char *argv[]) {
         realty_entries_full.emplace_back(current_entry);
     }
 
-    if(realty_entries_full.empty())
+    std::cout << "Total data size: " << realty_entries_full.size() << " records" << std::endl;
+    if (realty_entries_full.empty())
         throw std::logic_error("no data! can't train model");
 
     // converting data
@@ -60,23 +62,29 @@ int main(int argc, char *argv[]) {
     std::transform(realty_entries_full.cbegin(), realty_entries_full.cend(),
                    std::back_inserter(realty_entries), convert_realty_entry_full);
 
-
     // construct model
+    std::cout << "Starting model training..." << std::endl;
     std::vector<realty_entry_t> initial_centers;
-    dlib::kcentroid<realty_kernel_t> model_k_centroids(realty_kernel_t(0.1), 0.01, 100);
+    dlib::kcentroid<realty_kernel_t> model_k_centroids((realty_kernel_t()));
     dlib::kkmeans<realty_kernel_t> model(model_k_centroids);
 
     model.set_number_of_centers(static_cast<size_t>(num_clusters));
     pick_initial_centers(num_clusters, initial_centers, realty_entries, model.get_kernel());
-
-    std::cout << "Total data size: " << realty_entries.size() << " records" << std::endl;
     // train model
-    std::cout << "Starting model training..." << std::endl;
     model.train(realty_entries, initial_centers);
     std::cout << "Done model training" << std::endl;
 
+    std::cout << "Checking model balance" << std::endl;
+    std::map<int, int> cluster_counter;
+    for (const auto& entry: realty_entries)
+        cluster_counter[model(entry)]++;
+    for (int i = 0; i < num_clusters; i++)
+        std::cout << "cluster " << i << ": " << cluster_counter[i] << " entries" << std::endl;
+
+    std::cout << "Saving model..." << std::endl;
     dlib::serialize(filename + ".model") << model;
     dlib::serialize(filename + ".data") << realty_entries_full;
+    std::cout << "All done" << std::endl;
 
     return 0;
 }
